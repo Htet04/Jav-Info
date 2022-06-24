@@ -253,20 +253,6 @@ public class MainActivity extends AppCompatActivity {
 			}
 		});
 
-		/* have problem when continues
-		viewd.setButton(AlertDialog.BUTTON_NEUTRAL,"Delete",new DialogInterface.OnClickListener(){
-				@Override
-				public void onClick(DialogInterface di1, int pp1){
-					try{
-					_dsrc.remove(po);
-					saveData();
-					((BaseAdapter)grid1.getAdapter()).notifyDataSetChanged();
-					}catch(Exception e){
-						
-					}
-				}
-			});
-			*/
 		viewd.setOnShowListener(new DialogInterface.OnShowListener() {
 			@Override
 			public void onShow(DialogInterface p1) {
@@ -380,7 +366,6 @@ public class MainActivity extends AppCompatActivity {
 		ad.setTitle(t);
 		ad.setMessage(m);
 		ad.setCancelable(false);
-		ad.setCanceledOnTouchOutside(false);
 		ad.setButton(AlertDialog.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int p) {
