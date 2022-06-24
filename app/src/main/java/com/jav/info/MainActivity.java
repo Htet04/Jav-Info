@@ -86,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onItemClick(AdapterView<?> av, View v, int i, long l) {
 				final int _position = i;
+				
 				if (!Fileo.isExistFile(picPath(_position))) {
 					if (Fileo.isConnected(MainActivity.this)) {
 						pgd = new ProgressDialog(MainActivity.this);
