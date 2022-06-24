@@ -33,12 +33,5 @@
     "groupId": "com.squareup.okio",
     "scope": "compile",
     "versionName": "3.1.0"
-  },
-  {
-    "artifactId": "core",
-    "excludes": [],
-    "groupId": "androidx.core",
-    "scope": "compile",
-    "versionName": "1.8.0"
   }
 ]

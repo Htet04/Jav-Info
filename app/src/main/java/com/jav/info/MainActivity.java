@@ -43,10 +43,10 @@ public class MainActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
+
 		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
-		
+
 		initialLogic(savedInstanceState);
 		if (checkSelfPermission(
 				android.Manifest.permission.READ_EXTERNAL_STORAGE) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onItemClick(AdapterView<?> av, View v, int i, long l) {
 				final int _position = i;
-				
+
 				if (!Fileo.isExistFile(picPath(_position))) {
 					if (Fileo.isConnected(MainActivity.this)) {
 						pgd = new ProgressDialog(MainActivity.this);
@@ -104,11 +104,17 @@ public class MainActivity extends AppCompatActivity {
 								runOnUiThread(new Runnable() {
 									@Override
 									public void run() {
-										if (Fileo.isExistFile("/storage/emulated/0/Adult/img/"
-												+ _dsrc.get(_position).get("i") + ".jpg")) {
+										if (Fileo.isConnected(MainActivity.this)) {
+											if (Fileo.isExistFile("/storage/emulated/0/Adult/img/"
+													+ _dsrc.get(_position).get("i") + ".jpg")) {
+												pgd.dismiss();
+												((BaseAdapter) grid1.getAdapter()).notifyDataSetChanged();
+												_timer.cancel();
+											}
+										} else {
 											pgd.dismiss();
-											((BaseAdapter) grid1.getAdapter()).notifyDataSetChanged();
 											_timer.cancel();
+											shm(ctx(), "Network disconnect");
 										}
 									}
 								});
@@ -128,11 +134,12 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private void initialLogic() {
-		try{
-			_dsrc = new Gson().fromJson(Fileo.readFile(dataPath),new TypeToken<ArrayList<HashMap<String,Object>>>(){}.getType());
+		try {
+			_dsrc = new Gson().fromJson(Fileo.readFile(dataPath), new TypeToken<ArrayList<HashMap<String, Object>>>() {
+			}.getType());
 			grid1.setAdapter(new Gridview1Adapter(_dsrc));
-		}catch (Exception e){
-			shm(ctx(),e.getMessage());
+		} catch (Exception e) {
+			shm(ctx(), e.getMessage());
 		}
 	}
 
