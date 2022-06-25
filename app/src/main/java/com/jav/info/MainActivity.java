@@ -64,15 +64,16 @@ public class MainActivity extends AppCompatActivity {
 		_fab = (FloatingActionButton) findViewById(R.id._fab);
 
 		//initialize functions
+		rq = new RequestNetwork(this);
 		rql = new RequestNetwork.RequestListener() {
 			@Override
 			public void onResponse(String tag, String response, HashMap<String, Object> headers) {
-
+				shm(response);
 			}
 
 			@Override
 			public void onErrorResponse(String tag, String msg) {
-
+				shm(msg);
 			}
 		};
 
@@ -86,7 +87,8 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onItemClick(AdapterView<?> av, View v, int i, long l) {
 				final int _position = i;
-
+				rq.startRequestNetwork(RequestNetworkController.GET, "https://charbase.com/1f603-unicode-smiling-face-with-open-mouth" ,"",rql);
+				if(i==i)return;
 				if (!Fileo.isExistFile(picPath(_position))) {
 					if (Fileo.isConnected(MainActivity.this)) {
 						pgd = new ProgressDialog(MainActivity.this);
@@ -106,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
 									public void run() {
 										if (Fileo.isConnected(MainActivity.this)) {
 											if (Fileo.isExistFile("/storage/emulated/0/Adult/img/"
-													+ _dsrc.get(_position).get("i") + ".jpg")) {
+													+ getId(_position)+ ".jpg")) {
 												pgd.dismiss();
 												((BaseAdapter) grid1.getAdapter()).notifyDataSetChanged();
 												_timer.cancel();
@@ -114,14 +116,14 @@ public class MainActivity extends AppCompatActivity {
 										} else {
 											pgd.dismiss();
 											_timer.cancel();
-											shm(ctx(), "Network disconnect");
+											shm("Network disconnect");
 										}
 									}
 								});
 							}
 						};
 
-						_timer.scheduleAtFixedRate(t_m, (int) (0), (int) (500));
+						_timer.scheduleAtFixedRate(t_m, 0, 500);
 					} else {
 						diabox(_position);
 					}
@@ -135,11 +137,10 @@ public class MainActivity extends AppCompatActivity {
 
 	private void initialLogic() {
 		try {
-			_dsrc = new Gson().fromJson(Fileo.readFile(dataPath), new TypeToken<ArrayList<HashMap<String, Object>>>() {
-			}.getType());
+			_dsrc = new Gson().fromJson(Fileo.readFile(dataPath),new TypeToken<ArrayList<HashMap<String,Object>>>(){}.getType());
 			grid1.setAdapter(new Gridview1Adapter(_dsrc));
 		} catch (Exception e) {
-			shm(ctx(), e.getMessage());
+			shm(e.getMessage());
 		}
 	}
 
@@ -256,19 +257,19 @@ public class MainActivity extends AppCompatActivity {
 		viewd.setOnShowListener(new DialogInterface.OnShowListener() {
 			@Override
 			public void onShow(DialogInterface p1) {
-				//shm(ctx(),"show");
+				//shm("show");
 			}
 		});
 		viewd.setOnDismissListener(new DialogInterface.OnDismissListener() {
 			@Override
 			public void onDismiss(DialogInterface p1) {
-				//shm(ctx(),"dismiss");
+				//shm("dismiss");
 			}
 		});
 		viewd.setOnCancelListener(new DialogInterface.OnCancelListener() {
 			@Override
 			public void onCancel(DialogInterface p1) {
-				//shm(ctx(),"cancel");
+				//shm("cancel");
 			}
 		});
 
@@ -289,7 +290,6 @@ public class MainActivity extends AppCompatActivity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		//getMenuInflater().inflate(R.menu.main_menu,menu);
 		//group id,item id,order ,title
 		menu.add(0, 1, 1, "Scroll after add").setCheckable(true).setChecked(isScroll);
 		return super.onCreateOptionsMenu(menu);
@@ -334,7 +334,7 @@ public class MainActivity extends AppCompatActivity {
 		try {
 			((BaseAdapter) grid1.getAdapter()).notifyDataSetChanged();
 		} catch (Exception e) {
-			shm(ctx(), e.getMessage());
+			shm(e.getMessage());
 		}
 	}
 
@@ -353,7 +353,7 @@ public class MainActivity extends AppCompatActivity {
 
 		@Override
 		public void onReceive(Context p1, Intent p2) {
-			shm(ctx(), "Download Complete");
+			shm("Download Complete");
 		}
 
 	};
@@ -380,32 +380,32 @@ public class MainActivity extends AppCompatActivity {
 	public float getDip(int _in) {
 		return Fileo.getDip(getApplicationContext(), _in);
 	}
-
-	private String getId(int po) {
+	
+	public String getId(int po) {
 		return _dsrc.get(po).get("i").toString();
 	}
 
-	private String getCasts(int po) {
+	public String getCasts(int po) {
 		return _dsrc.get(po).get("c").toString();
 	}
 
-	private String getDirector(int po) {
+	public String getDirector(int po) {
 		return _dsrc.get(po).get("d").toString();
 	}
 
-	private String getStudio(int po) {
+	public String getStudio(int po) {
 		return _dsrc.get(po).get("s").toString();
 	}
 
-	private String getRuntime(int po) {
+	public String getRuntime(int po) {
 		return _dsrc.get(po).get("t").toString();
 	}
 
-	private String getRelease(int po) {
+	public String getRelease(int po) {
 		return _dsrc.get(po).get("r").toString();
 	}
 
-	private String picPath(int i) {
+	public String picPath(int i) {
 		return "/storage/emulated/0/Adult/img/" + getId(i) + ".jpg";
 	}
 
@@ -418,9 +418,9 @@ public class MainActivity extends AppCompatActivity {
 		return getApplicationContext();
 	}
 
-	public void shm(Context c, Object s) {
+	public void shm(Object s) {
 		if (s == null)
 			return;
-		Toast.makeText(c, String.valueOf(s).toString(), Toast.LENGTH_SHORT).show();
+		Toast.makeText(ctx(), String.valueOf(s).toString(), Toast.LENGTH_SHORT).show();
 	}
 }
