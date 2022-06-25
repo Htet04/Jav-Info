@@ -36,8 +36,9 @@ public class MainActivity extends AppCompatActivity {
 	private AlertDialog viewd;
 	private FloatingActionButton _fab;
 	private boolean isScroll = false;
-	private boolean oC = true;
+	private boolean opdelete = false;
 	private HashMap<String, Object> map = new HashMap<>();
+	private ArrayList<String> itd = new ArrayList<>();
 	private ArrayList<HashMap<String, Object>> _dsrc = new ArrayList<>();
 	private String dataPath = "/storage/emulated/0/Adult/data/R_data.json";
 	private RequestNetwork rq;
@@ -52,15 +53,16 @@ public class MainActivity extends AppCompatActivity {
 		setSupportActionBar(toolbar);
 
 		initialLogic(savedInstanceState);
-		if(Build.VERSION.SDK_INT>=23){
-		if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED||checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)==PackageManager.PERMISSION_DENIED) {
-			//initialLogic();
-		//} else {
-			requestPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-		}else{
-			initialLogic();
-		}
-		}else{
+		if (Build.VERSION.SDK_INT >= 23) {
+			if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
+					|| checkSelfPermission(
+							Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+				requestPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
+						Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+			} else {
+				initialLogic();
+			}
+		} else {
 			initialLogic();
 		}
 	}
@@ -95,52 +97,51 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onItemClick(AdapterView<?> av, View v, int i, long l) {
 				final int _position = i;
-				rq.startRequestNetwork(RequestNetworkController.GET,
-						"https://charbase.com/1f603-unicode-smiling-face-with-open-mouth", "", rql);
-				if (i == i)
-					return;
-				if (!Fileo.isExistFile(picPath(_position))) {
-					if (Fileo.isConnected(MainActivity.this)) {
-						pgd = new ProgressDialog(MainActivity.this);
-						pgd.setTitle("Downloading " + getId(_position));
-						pgd.setIndeterminate(true);
-						pgd.setCancelable(false);
-						pgd.setCanceledOnTouchOutside(false);
-						pgd.show();
-						Dow.startDownload("https://img2.javmost.com/file_image/" + getId(_position) + ".jpg",
-								getId(_position) + ".jpg", "Adult/img/", MainActivity.this);
-						final java.util.Timer _timer = new java.util.Timer();
-						final java.util.TimerTask t_m = new java.util.TimerTask() {
-							@Override
-							public void run() {
-								runOnUiThread(new Runnable() {
-									@Override
-									public void run() {
-										if (Fileo.isConnected(MainActivity.this)) {
-											if (Fileo.isExistFile(
-													"/storage/emulated/0/Adult/img/" + getId(_position) + ".jpg")) {
+				if (opdelete) {
+					itd.add(getId(_position));
+				} else {
+					if (!Fileo.isExistFile(picPath(_position))) {
+						if (Fileo.isConnected(MainActivity.this)) {
+							pgd = new ProgressDialog(MainActivity.this);
+							pgd.setTitle("Downloading " + getId(_position));
+							pgd.setIndeterminate(true);
+							pgd.setCancelable(false);
+							pgd.setCanceledOnTouchOutside(false);
+							pgd.show();
+							Dow.startDownload("https://img2.javmost.com/file_image/" + getId(_position) + ".jpg",
+									getId(_position) + ".jpg", "Adult/img/", MainActivity.this);
+							final java.util.Timer _timer = new java.util.Timer();
+							final java.util.TimerTask t_m = new java.util.TimerTask() {
+								@Override
+								public void run() {
+									runOnUiThread(new Runnable() {
+										@Override
+										public void run() {
+											if (Fileo.isConnected(MainActivity.this)) {
+												if (Fileo.isExistFile(
+														"/storage/emulated/0/Adult/img/" + getId(_position) + ".jpg")) {
+													pgd.dismiss();
+													((BaseAdapter) grid1.getAdapter()).notifyDataSetChanged();
+													_timer.cancel();
+												}
+											} else {
 												pgd.dismiss();
-												((BaseAdapter) grid1.getAdapter()).notifyDataSetChanged();
 												_timer.cancel();
+												shm("Network disconnect");
 											}
-										} else {
-											pgd.dismiss();
-											_timer.cancel();
-											shm("Network disconnect");
 										}
-									}
-								});
-							}
-						};
+									});
+								}
+							};
 
-						_timer.scheduleAtFixedRate(t_m, 0, 500);
+							_timer.scheduleAtFixedRate(t_m, 0, 500);
+						} else {
+							diabox(_position);
+						}
 					} else {
 						diabox(_position);
 					}
-				} else {
-					diabox(_position);
 				}
-
 			}
 		});
 	}
@@ -318,7 +319,6 @@ public class MainActivity extends AppCompatActivity {
 			item.setChecked(isScroll);
 			break;
 		}
-
 		}
 		return super.onOptionsItemSelected(item);
 	}
@@ -328,10 +328,11 @@ public class MainActivity extends AppCompatActivity {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 		switch (requestCode) {
 		case (1): {
-			if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)==PackageManager.PERMISSION_GRANTED) {
+			if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
 				initialLogic();
 			} else {
-				requestPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+				requestPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
+						Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
 			}
 			break;
 		}
@@ -378,35 +379,35 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	//Mini Functions
-	public float getDip(int _in) {
+	private float getDip(int _in) {
 		return Fileo.getDip(getApplicationContext(), _in);
 	}
 
-	public String getId(int po) {
+	private String getId(int po) {
 		return _dsrc.get(po).get("i").toString();
 	}
 
-	public String getCasts(int po) {
+	private String getCasts(int po) {
 		return _dsrc.get(po).get("c").toString();
 	}
 
-	public String getDirector(int po) {
+	private String getDirector(int po) {
 		return _dsrc.get(po).get("d").toString();
 	}
 
-	public String getStudio(int po) {
+	private String getStudio(int po) {
 		return _dsrc.get(po).get("s").toString();
 	}
 
-	public String getRuntime(int po) {
+	private String getRuntime(int po) {
 		return _dsrc.get(po).get("t").toString();
 	}
 
-	public String getRelease(int po) {
+	private String getRelease(int po) {
 		return _dsrc.get(po).get("r").toString();
 	}
 
-	public String picPath(int i) {
+	private String picPath(int i) {
 		return "/storage/emulated/0/Adult/img/" + getId(i) + ".jpg";
 	}
 
@@ -419,7 +420,7 @@ public class MainActivity extends AppCompatActivity {
 		return getApplicationContext();
 	}
 
-	public void shm(Object s) {
+	private void shm(Object s) {
 		if (s == null)
 			return;
 		Toast.makeText(ctx(), String.valueOf(s).toString(), Toast.LENGTH_SHORT).show();
