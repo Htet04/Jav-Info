@@ -11,6 +11,7 @@ import com.jav.info.Dow;
 
 import android.os.Bundle;
 import android.app.*;
+import android.app.Activity;
 import android.view.*;
 import android.widget.*;
 import android.net.Uri;
@@ -19,6 +20,9 @@ import android.graphics.Color;
 import android.content.*;
 import android.view.inputmethod.EditorInfo;
 import android.text.InputType;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.*;
 
 import java.lang.*;
 import java.io.*;
@@ -48,12 +52,16 @@ public class MainActivity extends AppCompatActivity {
 		setSupportActionBar(toolbar);
 
 		initialLogic(savedInstanceState);
-		if (checkSelfPermission(
-				android.Manifest.permission.READ_EXTERNAL_STORAGE) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+		if(Build.VERSION.SDK_INT>=23){
+		if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED||checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)==PackageManager.PERMISSION_DENIED) {
+			//initialLogic();
+		//} else {
+			requestPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+		}else{
 			initialLogic();
-		} else {
-			requestPermissions(new String[] { android.Manifest.permission.READ_EXTERNAL_STORAGE,
-					android.Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+		}
+		}else{
+			initialLogic();
 		}
 	}
 
@@ -87,8 +95,10 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onItemClick(AdapterView<?> av, View v, int i, long l) {
 				final int _position = i;
-				rq.startRequestNetwork(RequestNetworkController.GET, "https://charbase.com/1f603-unicode-smiling-face-with-open-mouth" ,"",rql);
-				if(i==i)return;
+				rq.startRequestNetwork(RequestNetworkController.GET,
+						"https://charbase.com/1f603-unicode-smiling-face-with-open-mouth", "", rql);
+				if (i == i)
+					return;
 				if (!Fileo.isExistFile(picPath(_position))) {
 					if (Fileo.isConnected(MainActivity.this)) {
 						pgd = new ProgressDialog(MainActivity.this);
@@ -107,8 +117,8 @@ public class MainActivity extends AppCompatActivity {
 									@Override
 									public void run() {
 										if (Fileo.isConnected(MainActivity.this)) {
-											if (Fileo.isExistFile("/storage/emulated/0/Adult/img/"
-													+ getId(_position)+ ".jpg")) {
+											if (Fileo.isExistFile(
+													"/storage/emulated/0/Adult/img/" + getId(_position) + ".jpg")) {
 												pgd.dismiss();
 												((BaseAdapter) grid1.getAdapter()).notifyDataSetChanged();
 												_timer.cancel();
@@ -137,7 +147,8 @@ public class MainActivity extends AppCompatActivity {
 
 	private void initialLogic() {
 		try {
-			_dsrc = new Gson().fromJson(Fileo.readFile(dataPath),new TypeToken<ArrayList<HashMap<String,Object>>>(){}.getType());
+			_dsrc = new Gson().fromJson(Fileo.readFile(dataPath), new TypeToken<ArrayList<HashMap<String, Object>>>() {
+			}.getType());
 			grid1.setAdapter(new Gridview1Adapter(_dsrc));
 		} catch (Exception e) {
 			shm(e.getMessage());
@@ -317,25 +328,15 @@ public class MainActivity extends AppCompatActivity {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 		switch (requestCode) {
 		case (1): {
-			if (grantResults[0] == RESULT_OK) {
+			if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)==PackageManager.PERMISSION_GRANTED) {
 				initialLogic();
 			} else {
-				requestPermissions(new String[] { android.Manifest.permission.READ_EXTERNAL_STORAGE,
-						android.Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+				requestPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
 			}
 			break;
 		}
 		}
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-		try {
-			((BaseAdapter) grid1.getAdapter()).notifyDataSetChanged();
-		} catch (Exception e) {
-			shm(e.getMessage());
-		}
+		shm(grantResults[0]);
 	}
 
 	@Override
@@ -380,7 +381,7 @@ public class MainActivity extends AppCompatActivity {
 	public float getDip(int _in) {
 		return Fileo.getDip(getApplicationContext(), _in);
 	}
-	
+
 	public String getId(int po) {
 		return _dsrc.get(po).get("i").toString();
 	}
