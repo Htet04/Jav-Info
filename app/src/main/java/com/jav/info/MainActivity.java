@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
 		public int getCount() {
 			return _data.size();
 		}
-
+		
 		@Override
 		public HashMap<String, Object> getItem(int _index) {
 			return _data.get(_index);
@@ -303,14 +303,15 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		//group id,item id,order ,title
-		menu.add(0, 1, 1, "Scroll after add").setCheckable(true).setChecked(isScroll);
+		//menu.add(0, 1, 1, "Scroll after add").setCheckable(true).setChecked(isScroll);
+		getMenuInflater().inflate(R.menu.main_menu,menu);
 		return super.onCreateOptionsMenu(menu);
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case (1): {
+		case (R.id.menu_canScroll): {
 			if (isScroll) {
 				isScroll = false;
 			} else {
