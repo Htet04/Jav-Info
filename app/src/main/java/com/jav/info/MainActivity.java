@@ -30,7 +30,7 @@ import java.util.*;
 
 public class MainActivity extends AppCompatActivity {
 
-	private Toolbar toolbar;
+	
 	private TextView text;
 	private GridView grid1;
 	private ProgressDialog pgd;
@@ -49,9 +49,7 @@ public class MainActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		toolbar = (Toolbar) findViewById(R.id.toolbar);
-		setSupportActionBar(toolbar);
-
+		
 		initialLogic(savedInstanceState);
 		if (Build.VERSION.SDK_INT >= 23) {
 			if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
@@ -162,7 +160,6 @@ public class MainActivity extends AppCompatActivity {
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
 			mode.setTitle("Select Items");
 			mode.setSubtitle("One item selected");
-			toolbar.setVisibility(View.GONE);
 			menu.add(0, 0, 0, "Delete");
 			return true;
 		}
@@ -176,14 +173,7 @@ public class MainActivity extends AppCompatActivity {
 		}
 
 		public void onDestroyActionMode(ActionMode mode) {
-			new Handler().postDelayed(new Runnable() {
-
-				@Override
-				public void run() {
-					toolbar.setVisibility(View.VISIBLE);
-				}
-			}, 500);
-
+			
 		}
 
 		public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
