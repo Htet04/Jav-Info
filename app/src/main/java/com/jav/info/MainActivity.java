@@ -175,10 +175,11 @@ public class MainActivity extends AppCompatActivity {
 
 		public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
 			try{
-			grid1.setSelection(position);
-			grid1.setSelected(checked);
-			grid1.setCacheColorHint(Color.WHITE);
-			grid1.setSelector(R.drawable.ic_delete_outline);
+				if(checked){
+				grid1.getChildAt(position).setBackgroundColor(Color.WHITE);
+				}else{
+					grid1.getChildAt(position).setBackgroundColor(Color.parseColor("#FF626262"));
+				}
 			}catch(Exception e){
 				shm(e.getMessage());
 			}
