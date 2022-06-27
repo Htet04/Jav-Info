@@ -30,6 +30,7 @@ import java.util.*;
 
 public class MainActivity extends AppCompatActivity {
 
+	private Toolbar toolbar;
 	private TextView text;
 	private GridView grid1;
 	private ProgressDialog pgd;
@@ -48,8 +49,7 @@ public class MainActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
-		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+		toolbar = (Toolbar) findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
 
 		initialLogic(savedInstanceState);
@@ -148,12 +148,56 @@ public class MainActivity extends AppCompatActivity {
 
 	private void initialLogic() {
 		try {
+			grid1.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE_MODAL);
+			grid1.setMultiChoiceModeListener(new MultiChoiceModeListener());
 			_dsrc = new Gson().fromJson(Fileo.readFile(dataPath), new TypeToken<ArrayList<HashMap<String, Object>>>() {
 			}.getType());
 			grid1.setAdapter(new Gridview1Adapter(_dsrc));
 		} catch (Exception e) {
 			shm(e.getMessage());
 		}
+	}
+
+	public class MultiChoiceModeListener implements GridView.MultiChoiceModeListener {
+		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+			mode.setTitle("Select Items");
+			mode.setSubtitle("One item selected");
+			toolbar.setVisibility(View.GONE);
+			menu.add(0, 0, 0, "Delete");
+			return true;
+		}
+
+		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+			return true;
+		}
+
+		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+			return true;
+		}
+
+		public void onDestroyActionMode(ActionMode mode) {
+			new Handler().postDelayed(new Runnable() {
+
+				@Override
+				public void run() {
+					toolbar.setVisibility(View.VISIBLE);
+				}
+			}, 500);
+
+		}
+
+		public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
+			int selectCount = grid1.getCheckedItemCount();
+			switch (selectCount) {
+			case 1:
+				mode.setSubtitle("One item selected");
+				break;
+			default:
+				mode.setSubtitle("" + selectCount + " items selected");
+				break;
+			}
+		}
+
 	}
 
 	// GridView bind customView
