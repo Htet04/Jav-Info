@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
 	private FloatingActionButton _fab;
 	private boolean isScroll = false;
 	private boolean opdelete = false;
+	private ArrayList<String> idtd = new ArrayList<>();
 	private HashMap<String, Object> map = new HashMap<>();
 	private ArrayList<String> itd = new ArrayList<>();
 	private ArrayList<HashMap<String, Object>> _dsrc = new ArrayList<>();
@@ -148,43 +149,9 @@ public class MainActivity extends AppCompatActivity {
 			_dsrc = new Gson().fromJson(Fileo.readFile(dataPath), new TypeToken<ArrayList<HashMap<String, Object>>>() {
 			}.getType());
 			grid1.setAdapter(new Gridview1Adapter(_dsrc));
-			grid1.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE_MODAL);
-			grid1.setMultiChoiceModeListener(new MultiChoiceModeListener());
-		} catch (Exception e) {
+			} catch (Exception e) {
 			shm(e.getMessage());
 		}
-	}
-
-	public class MultiChoiceModeListener implements GridView.MultiChoiceModeListener {
-		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-			mode.setTitle("Select Items");
-			menu.add(0,1,1,"Delete").setIcon(R.drawable.ic_delete);
-			return true;
-		}
-
-		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-			return true;
-		}
-
-		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-			return true;
-		}
-
-		public void onDestroyActionMode(ActionMode mode) {
-		}
-
-		public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
-			try{
-				if(checked){
-				grid1.getChildAt(position).setBackgroundColor(Color.WHITE);
-				}else{
-					grid1.getChildAt(position).setBackgroundColor(Color.parseColor("#FF626262"));
-				}
-			}catch(Exception e){
-				shm(e.getMessage());
-			}
-		}
-
 	}
 
 	// GridView bind customView
