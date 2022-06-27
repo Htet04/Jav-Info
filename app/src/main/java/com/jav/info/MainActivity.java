@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
 	private ProgressDialog pgd;
 	private AlertDialog viewd;
 	private FloatingActionButton _fab;
+	private int pp = 0;
 	private boolean isScroll = false;
 	private boolean opdelete = false;
 	private ArrayList<String> idtd = new ArrayList<>();
@@ -88,15 +89,40 @@ public class MainActivity extends AppCompatActivity {
 		_fab.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				if(opdelete){
+					opdelete=false;
+					_fab.setRotation((float)0);
+				}else{
 				diabox(-1);
+				}
 			}
 		});
+
 		grid1.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> av, View v, int i, long l) {
 				final int _position = i;
 				if (opdelete) {
-					itd.add(getId(_position));
+					AlertDialog dd = new AlertDialog.Builder(MainActivity.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+							.create();
+					dd.setTitle("Are you sure?");
+					dd.setMessage("To delete ".concat(getId(i)));
+					dd.setButton(AlertDialog.BUTTON_NEGATIVE, "NO", new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface d, int di) {
+							d.dismiss();
+						}
+					});
+					dd.setButton(AlertDialog.BUTTON_POSITIVE, "Yes", new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface d, int di) {
+							_dsrc.remove(i);
+							saveData();
+							((BaseAdapter) grid1.getAdapter()).notifyDataSetChanged();
+							d.dismiss();
+						}
+					});
+					dd.show();
 				} else {
 					if (!Fileo.isExistFile(picPath(_position))) {
 						if (Fileo.isConnected(MainActivity.this)) {
@@ -108,31 +134,7 @@ public class MainActivity extends AppCompatActivity {
 							pgd.show();
 							Dow.startDownload("https://img2.javmost.com/file_image/" + getId(_position) + ".jpg",
 									getId(_position) + ".jpg", "Adult/img/", MainActivity.this);
-							final java.util.Timer _timer = new java.util.Timer();
-							final java.util.TimerTask t_m = new java.util.TimerTask() {
-								@Override
-								public void run() {
-									runOnUiThread(new Runnable() {
-										@Override
-										public void run() {
-											if (Fileo.isConnected(MainActivity.this)) {
-												if (Fileo.isExistFile(
-														"/storage/emulated/0/Adult/img/" + getId(_position) + ".jpg")) {
-													pgd.dismiss();
-													((BaseAdapter) grid1.getAdapter()).notifyDataSetChanged();
-													_timer.cancel();
-												}
-											} else {
-												pgd.dismiss();
-												_timer.cancel();
-												shm("Network disconnect");
-											}
-										}
-									});
-								}
-							};
-
-							_timer.scheduleAtFixedRate(t_m, 0, 500);
+							pp = i;
 						} else {
 							diabox(_position);
 						}
@@ -149,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
 			_dsrc = new Gson().fromJson(Fileo.readFile(dataPath), new TypeToken<ArrayList<HashMap<String, Object>>>() {
 			}.getType());
 			grid1.setAdapter(new Gridview1Adapter(_dsrc));
-			} catch (Exception e) {
+		} catch (Exception e) {
 			shm(e.getMessage());
 		}
 	}
@@ -302,6 +304,7 @@ public class MainActivity extends AppCompatActivity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		//group id,item id,order ,title
 		menu.add(0, 1, 1, "Scroll after add").setCheckable(true).setChecked(isScroll);
+		menu.add(0, 2, 2, "Delete select").setCheckable(true).setChecked(opdelete);
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -315,6 +318,17 @@ public class MainActivity extends AppCompatActivity {
 				isScroll = true;
 			}
 			item.setChecked(isScroll);
+			break;
+		}
+		case (2): {
+			if (opdelete) {
+				opdelete = false;
+				_fab.setRotation((float) 0);
+			} else {
+				opdelete = true;
+				_fab.setRotation((float) 45);
+			}
+			item.setChecked(opdelete);
 			break;
 		}
 		}
@@ -349,12 +363,15 @@ public class MainActivity extends AppCompatActivity {
 		unregisterReceiver(onComplete);
 	}
 
-	BroadcastReceiver onComplete = new BroadcastReceiver() {
+	BroadcastReceiver onComplete=new BroadcastReceiver(){
 
-		@Override
-		public void onReceive(Context p1, Intent p2) {
-			shm("Download Complete");
+	@Override public void onReceive(Context p1,Intent p2){
+		if(Fileo.isExistFile(picPath(pp))){
+		shm("Download Complete");
+		}else{
+			shm("File not found");
 		}
+		pgd.dismiss();}
 
 	};
 
