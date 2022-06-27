@@ -30,7 +30,6 @@ import java.util.*;
 
 public class MainActivity extends AppCompatActivity {
 
-	
 	private TextView text;
 	private GridView grid1;
 	private ProgressDialog pgd;
@@ -49,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
+
 		initialLogic(savedInstanceState);
 		if (Build.VERSION.SDK_INT >= 23) {
 			if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
@@ -146,11 +145,11 @@ public class MainActivity extends AppCompatActivity {
 
 	private void initialLogic() {
 		try {
-			grid1.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE_MODAL);
-			grid1.setMultiChoiceModeListener(new MultiChoiceModeListener());
 			_dsrc = new Gson().fromJson(Fileo.readFile(dataPath), new TypeToken<ArrayList<HashMap<String, Object>>>() {
 			}.getType());
 			grid1.setAdapter(new Gridview1Adapter(_dsrc));
+			grid1.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE_MODAL);
+			grid1.setMultiChoiceModeListener(new MultiChoiceModeListener());
 		} catch (Exception e) {
 			shm(e.getMessage());
 		}
@@ -159,8 +158,7 @@ public class MainActivity extends AppCompatActivity {
 	public class MultiChoiceModeListener implements GridView.MultiChoiceModeListener {
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
 			mode.setTitle("Select Items");
-			mode.setSubtitle("One item selected");
-			menu.add(0, 0, 0, "Delete");
+			menu.add(0,1,1,"Delete").setIcon(R.drawable.ic_delete);
 			return true;
 		}
 
@@ -173,18 +171,16 @@ public class MainActivity extends AppCompatActivity {
 		}
 
 		public void onDestroyActionMode(ActionMode mode) {
-			
 		}
 
 		public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
-			int selectCount = grid1.getCheckedItemCount();
-			switch (selectCount) {
-			case 1:
-				mode.setSubtitle("One item selected");
-				break;
-			default:
-				mode.setSubtitle("" + selectCount + " items selected");
-				break;
+			try{
+			grid1.setSelection(position);
+			grid1.setSelected(checked);
+			grid1.setCacheColorHint(Color.WHITE);
+			grid1.setSelector(R.drawable.ic_delete_outline);
+			}catch(Exception e){
+				shm(e.getMessage());
 			}
 		}
 
