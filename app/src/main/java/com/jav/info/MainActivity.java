@@ -3,6 +3,7 @@ package com.jav.info;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -29,11 +30,12 @@ import java.io.*;
 import java.util.*;
 
 public class MainActivity extends AppCompatActivity {
-
+	private Toolbar _toolbar;
 	private TextView text;
 	private GridView grid1;
 	private ProgressDialog pgd;
 	private AlertDialog viewd;
+	private SwipeRefreshLayout _srl;
 	private FloatingActionButton _fab;
 	private int pp = 0;
 	private boolean isScroll = false;
@@ -50,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
+		
 		initialLogic(savedInstanceState);
 		if (Build.VERSION.SDK_INT >= 23) {
 			if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
@@ -71,18 +73,22 @@ public class MainActivity extends AppCompatActivity {
 		registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 		grid1 = (GridView) findViewById(R.id.grid1);
 		_fab = (FloatingActionButton) findViewById(R.id._fab);
-
+		_srl = (SwipeRefreshLayout) findViewById(R.id._srl);
+		_toolbar = findViewById(R.id._toolbar);
 		//initialize functions
+		setSupportActionBar(_toolbar);
 		rq = new RequestNetwork(this);
 		rql = new RequestNetwork.RequestListener() {
 			@Override
 			public void onResponse(String tag, String response, HashMap<String, Object> headers) {
 				shm(response);
+				_srl.setRefreshing(false);
 			}
 
 			@Override
 			public void onErrorResponse(String tag, String msg) {
 				shm(msg);
+				_srl.setRefreshing(false);
 			}
 		};
 
@@ -90,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onClick(View v) {
 				if(opdelete){
+					_toolbar.setTitle(getString(R.string.app_name));
 					opdelete=false;
 					_fab.setRotation((float)0);
 				}else{
@@ -97,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
 				}
 			}
 		});
-
+		
 		grid1.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> av, View v, int i, long l) {
@@ -142,6 +149,13 @@ public class MainActivity extends AppCompatActivity {
 						diabox(_position);
 					}
 				}
+			}
+		});
+		
+		_srl.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener(){
+			@Override
+			public void onRefresh(){
+				rq.startRequestNetwork(RequestNetworkController.GET,"https://pastebin.com/raw/6g9LswwF","",rql);
 			}
 		});
 	}
@@ -304,7 +318,11 @@ public class MainActivity extends AppCompatActivity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		//group id,item id,order ,title
 		menu.add(0, 1, 1, "Scroll after add").setCheckable(true).setChecked(isScroll);
-		menu.add(0, 2, 2, "Delete select").setCheckable(true).setChecked(opdelete);
+		menu.add(0, 2, 2, "Delete select");
+		SubMenu sm1 = menu.addSubMenu(0,3,3,"Source Link");
+		RadioButton r1 = new RadioButton(MainActivity.this);
+		sm1.add(0,4,1,"JavMost").setActionView(r1);
+		
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -323,14 +341,16 @@ public class MainActivity extends AppCompatActivity {
 		case (2): {
 			if (opdelete) {
 				opdelete = false;
+				_toolbar.setTitle(getString(R.string.app_name));
 				_fab.setRotation((float) 0);
 			} else {
 				opdelete = true;
+				_toolbar.setTitle("Delete Items By Clicking");
 				_fab.setRotation((float) 45);
 			}
-			item.setChecked(opdelete);
 			break;
 		}
+		
 		}
 		return super.onOptionsItemSelected(item);
 	}
