@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
+
 		initialLogic(savedInstanceState);
 		if (Build.VERSION.SDK_INT >= 23) {
 			if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
@@ -95,16 +95,16 @@ public class MainActivity extends AppCompatActivity {
 		_fab.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if(opdelete){
+				if (opdelete) {
 					_toolbar.setTitle(getString(R.string.app_name));
-					opdelete=false;
-					_fab.setRotation((float)0);
-				}else{
-				diabox(-1);
+					opdelete = false;
+					_fab.setRotation((float) 0);
+				} else {
+					diabox(-1);
 				}
 			}
 		});
-		
+
 		grid1.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> av, View v, int i, long l) {
@@ -151,11 +151,22 @@ public class MainActivity extends AppCompatActivity {
 				}
 			}
 		});
-		
-		_srl.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener(){
+
+		_srl.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
 			@Override
-			public void onRefresh(){
-				rq.startRequestNetwork(RequestNetworkController.GET,"https://pastebin.com/raw/6g9LswwF","",rql);
+			public void onRefresh() {
+				if (Fileo.isConnected(getApplicationContext())) {
+					rq.startRequestNetwork(RequestNetworkController.GET, "https://pastebin.com/raw/6g9LswwF", "", rql);
+				} else {
+					new Handler().postDelayed(new Runnable() {
+
+						@Override
+						public void run() {
+							shm("No Network Connection!");
+							_srl.setRefreshing(false);
+						}
+					}, 1000);
+				}
 			}
 		});
 	}
@@ -319,10 +330,10 @@ public class MainActivity extends AppCompatActivity {
 		//group id,item id,order ,title
 		menu.add(0, 1, 1, "Scroll after add").setCheckable(true).setChecked(isScroll);
 		menu.add(0, 2, 2, "Delete select");
-		SubMenu sm1 = menu.addSubMenu(0,3,3,"Source Link");
+		SubMenu sm1 = menu.addSubMenu(0, 3, 3, "Source Link");
 		RadioButton r1 = new RadioButton(MainActivity.this);
-		sm1.add(0,4,1,"JavMost").setActionView(r1);
-		
+		sm1.add(0, 4, 1, "JavMost").setActionView(r1);
+
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -350,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
 			}
 			break;
 		}
-		
+
 		}
 		return super.onOptionsItemSelected(item);
 	}
@@ -383,15 +394,17 @@ public class MainActivity extends AppCompatActivity {
 		unregisterReceiver(onComplete);
 	}
 
-	BroadcastReceiver onComplete=new BroadcastReceiver(){
+	BroadcastReceiver onComplete = new BroadcastReceiver() {
 
-	@Override public void onReceive(Context p1,Intent p2){
-		if(Fileo.isExistFile(picPath(pp))){
-		shm("Download Complete");
-		}else{
-			shm("File not found");
+		@Override
+		public void onReceive(Context p1, Intent p2) {
+			if (Fileo.isExistFile(picPath(pp))) {
+				shm("Download Complete");
+			} else {
+				shm("File not found");
+			}
+			pgd.dismiss();
 		}
-		pgd.dismiss();}
 
 	};
 
