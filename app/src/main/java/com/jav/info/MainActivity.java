@@ -3,6 +3,8 @@ package com.jav.info;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
@@ -47,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
 	private boolean opdelete = false;
 	private ArrayList<String> idtd = new ArrayList<>();
 	private HashMap<String, Object> map = new HashMap<>();
-	
+
 	private ArrayList<String> itd = new ArrayList<>();
 	private ArrayList<HashMap<String, Object>> _dsrc = new ArrayList<>();
 	private String dataPath = "/storage/emulated/0/Adult/data/R_data.json";
@@ -85,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
 		set = getSharedPreferences("settings", Activity.MODE_PRIVATE);
 		setSupportActionBar(_toolbar);
 		rq = new RequestNetwork(this);
-		
+
 		rql = new RequestNetwork.RequestListener() {
 			@Override
 			public void onResponse(String tag, String response, HashMap<String, Object> headers) {
@@ -117,6 +119,10 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onItemClick(AdapterView<?> av, View v, int i, long l) {
 				final int _position = i;
+				creatNoti();
+				if (2 == 2)
+					return;
+
 				if (opdelete) {
 					AlertDialog dd = new AlertDialog.Builder(MainActivity.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
 							.create();
@@ -283,7 +289,7 @@ public class MainActivity extends AppCompatActivity {
 					}
 					saveData();
 					((BaseAdapter) grid1.getAdapter()).notifyDataSetChanged();
-					if (set.getString("isScroll","")=="yes") {
+					if (set.getString("isScroll", "") == "yes") {
 						grid1.smoothScrollToPosition(_dsrc.size());
 					}
 				} catch (Exception e) {
@@ -338,8 +344,8 @@ public class MainActivity extends AppCompatActivity {
 		//group id,item id,order ,title
 		MenuItem m1 = menu.add(0, 1, 1, "Delete select");
 		m1.setIcon(R.drawable.ic_delete);
-		m1.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM|MenuItem.SHOW_AS_ACTION_WITH_TEXT);
-		
+		m1.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -389,13 +395,19 @@ public class MainActivity extends AppCompatActivity {
 		unregisterReceiver(onComplete);
 	}
 
-	BroadcastReceiver onComplete=new BroadcastReceiver(){
+	BroadcastReceiver onComplete = new BroadcastReceiver() {
 
-	@Override public void onReceive(Context p1,Intent p2){if(Fileo.isExistFile(picPath(pp))){shm("Download Complete");}else{shm("File not found");}pgd.dismiss();}
+		@Override
+		public void onReceive(Context p1, Intent p2) {
+			if (Fileo.isExistFile(picPath(pp))) {
+				shm("Download Complete");
+			} else {
+				shm("File not found");
+			}
+			pgd.dismiss();
+		}
 
 	};
-
-	
 
 	//Error Dialog
 	public void CEr(String t, String m) {
@@ -416,6 +428,36 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	//Mini Functions
+	private void creatNoti() {
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			CharSequence name = "test";
+			String description = "test";
+			int importance = NotificationManager.IMPORTANCE_DEFAULT;
+			NotificationChannel channel = new NotificationChannel("test", name, importance);
+			channel.setDescription(description);
+			// Register the channel with the system; you can't change the importance
+			// or other notification behaviors after this
+			NotificationManager notificationManager = getSystemService(NotificationManager.class);
+			notificationManager.createNotificationChannel(channel);
+		}
+		Intent intent = new Intent(this, MainActivity.class);
+		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+
+		NotificationCompat.Builder b = new NotificationCompat.Builder(this, "test")
+				.setSmallIcon(R.drawable.ic_delete)
+				.setContentTitle("test")
+				.setContentText("testttt")
+				.setPriority(NotificationCompat.PRIORITY_DEFAULT)
+				.setAutoCancel(true)
+				.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+				.setContentIntent(pendingIntent);
+
+		NotificationManagerCompat nm = NotificationManagerCompat.from(this);
+		nm.notify(1, b.build());
+	}
+
 	private float getDip(int _in) {
 		return Fileo.getDip(getApplicationContext(), _in);
 	}
