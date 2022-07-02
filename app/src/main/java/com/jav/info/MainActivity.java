@@ -1,5 +1,6 @@
 package com.jav.info;
 
+import android.net.ConnectivityManager;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -36,6 +37,7 @@ import android.content.SharedPreferences;
 import java.lang.*;
 import java.io.*;
 import java.util.*;
+import okhttp3.internal.connection.ConnectInterceptor;
 
 public class MainActivity extends AppCompatActivity {
 	private Toolbar _toolbar;
@@ -80,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
 	private void initialLogic(Bundle sa) {
 		//initialize functions
 		registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+		registerReceiver(isNerworkAviable,new IntentFilter());
 		grid1 = (GridView) findViewById(R.id.grid1);
 		_fab = (FloatingActionButton) findViewById(R.id._fab);
 		_srl = (SwipeRefreshLayout) findViewById(R.id._srl);
@@ -87,7 +90,13 @@ public class MainActivity extends AppCompatActivity {
 		set = getSharedPreferences("settings", Activity.MODE_PRIVATE);
 		setSupportActionBar(_toolbar);
 		rq = new RequestNetwork(this);
-
+		
+		if(Fileo.isExistFile(Fileo.getPackageDataDir(getApplicationContext()).concat("/data.json"))){
+			shm("yes");
+		}else{
+			Fileo.writeFile(Fileo.getPackageDataDir(getApplicationContext()).concat("/data.json"),"test");
+			shm("no");
+		}
 		rql = new RequestNetwork.RequestListener() {
 			@Override
 			public void onResponse(String tag, String response, HashMap<String, Object> headers) {
@@ -119,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onItemClick(AdapterView<?> av, View v, int i, long l) {
 				final int _position = i;
-				creatNoti();
+				
 				if (2 == 2)
 					return;
 
@@ -407,6 +416,13 @@ public class MainActivity extends AppCompatActivity {
 			pgd.dismiss();
 		}
 
+	};
+	
+	BroadcastReceiver isNerworkAviable = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context p1, Intent p2){
+			
+		}
 	};
 
 	//Error Dialog
