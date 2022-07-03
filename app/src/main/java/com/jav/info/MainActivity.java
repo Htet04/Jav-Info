@@ -92,10 +92,10 @@ public class MainActivity extends AppCompatActivity {
 		rq = new RequestNetwork(this);
 		
 		if(Fileo.isExistFile(Fileo.getPackageDataDir(getApplicationContext()).concat("/data.json"))){
-			shm("yes");
+			//shm("yes");
 		}else{
 			Fileo.writeFile(Fileo.getPackageDataDir(getApplicationContext()).concat("/data.json"),"test");
-			shm("no");
+			//shm("no");
 		}
 		rql = new RequestNetwork.RequestListener() {
 			@Override
@@ -351,10 +351,29 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		//group id,item id,order ,title
-		MenuItem m1 = menu.add(0, 1, 1, "Delete select");
+		final MenuItem m0 = menu.add(0,3,1,"Search");
+		final SearchView sv = new SearchView(MainActivity.this);
+		m0.setActionView(sv);
+		sv.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
+			@Override
+			public boolean onQueryTextChange(String query){
+				shm(query);
+				return false;
+			}
+			@Override
+			public boolean onQueryTextSubmit(String text){
+				shm(text);
+				return false;
+			}
+		});
+		
+		m0.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+		final MenuItem m1 = menu.add(0, 1, 2, "Delete select");
 		m1.setIcon(R.drawable.ic_delete);
 		m1.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
-
+		final MenuItem m2 = menu.add(0,2,3,"Save Data");
+		m2.setIcon(R.drawable.ic_content_save);
+		m2.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -373,6 +392,10 @@ public class MainActivity extends AppCompatActivity {
 			}
 			break;
 		}
+		case(3):{
+			
+			break;
+			}
 		}
 		return super.onOptionsItemSelected(item);
 	}
