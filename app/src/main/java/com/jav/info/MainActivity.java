@@ -441,7 +441,7 @@ public class MainActivity extends AppCompatActivity {
 	BroadcastReceiver isNerworkAviable = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context p1, Intent p2) {
-			
+			//hi
 		}
 	};
 
