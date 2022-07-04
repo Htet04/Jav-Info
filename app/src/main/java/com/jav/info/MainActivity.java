@@ -2,6 +2,7 @@ package com.jav.info;
 
 import android.net.ConnectivityManager;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.appcompat.widget.Toolbar;
 
 import androidx.core.app.NotificationCompat;
@@ -25,6 +26,7 @@ import android.widget.*;
 
 import android.net.Uri;
 import android.graphics.drawable.*;
+import android.graphics.PorterDuff;
 import android.graphics.Color;
 import android.content.*;
 import android.view.inputmethod.EditorInfo;
@@ -82,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
 	private void initialLogic(Bundle sa) {
 		//initialize functions
 		registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
-		registerReceiver(isNerworkAviable,new IntentFilter());
+		registerReceiver(isNerworkAviable, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
 		grid1 = (GridView) findViewById(R.id.grid1);
 		_fab = (FloatingActionButton) findViewById(R.id._fab);
 		_srl = (SwipeRefreshLayout) findViewById(R.id._srl);
@@ -90,11 +92,11 @@ public class MainActivity extends AppCompatActivity {
 		set = getSharedPreferences("settings", Activity.MODE_PRIVATE);
 		setSupportActionBar(_toolbar);
 		rq = new RequestNetwork(this);
-		
-		if(Fileo.isExistFile(Fileo.getPackageDataDir(getApplicationContext()).concat("/data.json"))){
+
+		if (Fileo.isExistFile(Fileo.getPackageDataDir(getApplicationContext()).concat("/data.json"))) {
 			//shm("yes");
-		}else{
-			Fileo.writeFile(Fileo.getPackageDataDir(getApplicationContext()).concat("/data.json"),"test");
+		} else {
+			Fileo.writeFile(Fileo.getPackageDataDir(getApplicationContext()).concat("/data.json"), "test");
 			//shm("no");
 		}
 		rql = new RequestNetwork.RequestListener() {
@@ -128,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onItemClick(AdapterView<?> av, View v, int i, long l) {
 				final int _position = i;
-				
+
 				if (2 == 2)
 					return;
 
@@ -314,25 +316,6 @@ public class MainActivity extends AppCompatActivity {
 			}
 		});
 
-		viewd.setOnShowListener(new DialogInterface.OnShowListener() {
-			@Override
-			public void onShow(DialogInterface p1) {
-				//shm("show");
-			}
-		});
-		viewd.setOnDismissListener(new DialogInterface.OnDismissListener() {
-			@Override
-			public void onDismiss(DialogInterface p1) {
-				//shm("dismiss");
-			}
-		});
-		viewd.setOnCancelListener(new DialogInterface.OnCancelListener() {
-			@Override
-			public void onCancel(DialogInterface p1) {
-				//shm("cancel");
-			}
-		});
-
 		viewd.show();
 		try {
 			if (po != -1) {
@@ -351,36 +334,46 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		//group id,item id,order ,title
-		final MenuItem m0 = menu.add(0,3,1,"Search");
+
+		if (menu instanceof MenuBuilder) {
+			MenuBuilder mb = (MenuBuilder) menu;
+			mb.setOptionalIconsVisible(true);
+		}
+
+		MenuItem m0 = menu.add(0, 3, 1, "Search");
 		final SearchView sv = new SearchView(MainActivity.this);
 		m0.setActionView(sv);
-		sv.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
+		sv.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 			@Override
-			public boolean onQueryTextChange(String query){
+			public boolean onQueryTextChange(String query) {
 				shm(query);
 				return false;
 			}
+
 			@Override
-			public boolean onQueryTextSubmit(String text){
+			public boolean onQueryTextSubmit(String text) {
 				shm(text);
 				return false;
 			}
 		});
-		
+		m0.setIcon(Cs(R.drawable.ic_search));
 		m0.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
-		final MenuItem m1 = menu.add(0, 1, 2, "Delete select");
-		m1.setIcon(R.drawable.ic_delete);
-		m1.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
-		final MenuItem m2 = menu.add(0,2,3,"Save Data");
-		m2.setIcon(R.drawable.ic_content_save);
-		m2.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+		MenuItem m1 = menu.add(0, 1, 2, "Re-Load");
+		m1.setIcon(Cs(R.drawable.ic_reload));
+	
+		MenuItem m2 = menu.add(0, 2, 3, "Save Data");
+		m2.setIcon(Cs(R.drawable.ic_content_save));
+		
+		MenuItem m3 = menu.add(0, 4, 4, "Delete");
+		m3.setIcon(Cs(R.drawable.ic_delete));
+
 		return super.onCreateOptionsMenu(menu);
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case (1): {
+		case (4): {
 			if (opdelete) {
 				opdelete = false;
 				_toolbar.setTitle(getString(R.string.app_name));
@@ -392,10 +385,14 @@ public class MainActivity extends AppCompatActivity {
 			}
 			break;
 		}
-		case(3):{
-			
+		case (3): {
+
 			break;
-			}
+		}
+		case (2): {
+
+			break;
+		}
 		}
 		return super.onOptionsItemSelected(item);
 	}
@@ -440,10 +437,10 @@ public class MainActivity extends AppCompatActivity {
 		}
 
 	};
-	
+
 	BroadcastReceiver isNerworkAviable = new BroadcastReceiver() {
 		@Override
-		public void onReceive(Context p1, Intent p2){
+		public void onReceive(Context p1, Intent p2) {
 			
 		}
 	};
@@ -484,17 +481,19 @@ public class MainActivity extends AppCompatActivity {
 		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
-		NotificationCompat.Builder b = new NotificationCompat.Builder(this, "test")
-				.setSmallIcon(R.drawable.ic_delete)
-				.setContentTitle("test")
-				.setContentText("testttt")
-				.setPriority(NotificationCompat.PRIORITY_DEFAULT)
-				.setAutoCancel(true)
-				.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+		NotificationCompat.Builder b = new NotificationCompat.Builder(this, "test").setSmallIcon(R.drawable.ic_delete)
+				.setContentTitle("test").setContentText("testttt").setPriority(NotificationCompat.PRIORITY_DEFAULT)
+				.setAutoCancel(true).setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 				.setContentIntent(pendingIntent);
 
 		NotificationManagerCompat nm = NotificationManagerCompat.from(this);
 		nm.notify(1, b.build());
+	}
+
+	private Drawable Cs(int id) {
+		Drawable ad = getDrawable(id);
+		ad.setColorFilter(Color.BLACK, PorterDuff.Mode.SRC_IN);
+		return ad;
 	}
 
 	private float getDip(int _in) {
