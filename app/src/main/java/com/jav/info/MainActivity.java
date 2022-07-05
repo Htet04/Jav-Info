@@ -1,5 +1,6 @@
 package com.jav.info;
 
+import android.graphics.Typeface;
 import android.net.ConnectivityManager;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.menu.MenuBuilder;
@@ -130,10 +131,6 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onItemClick(AdapterView<?> av, View v, int i, long l) {
 				final int _position = i;
-
-				if (2 == 2)
-					return;
-
 				if (opdelete) {
 					AlertDialog dd = new AlertDialog.Builder(MainActivity.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
 							.create();
@@ -195,7 +192,9 @@ public class MainActivity extends AppCompatActivity {
 			}
 		});
 	}
-
+	
+	
+	//here main logic whith few of code :)
 	private void initialLogic() {
 		try {
 			_dsrc = new Gson().fromJson(Fileo.readFile(dataPath), new TypeToken<ArrayList<HashMap<String, Object>>>() {
@@ -239,7 +238,7 @@ public class MainActivity extends AppCompatActivity {
 			}
 			final TextView txt = (TextView) _view.findViewById(R.id.text1);
 			final ImageView img = (ImageView) _view.findViewById(R.id.img);
-
+			txt.setTypeface(pds());
 			try {
 				txt.setText(getId(_position));
 				Fileo.setImgFromPath(img, picPath(_position));
@@ -249,7 +248,8 @@ public class MainActivity extends AppCompatActivity {
 			return _view;
 		}
 	}
-
+	
+	//infomation dialog with add info function
 	public void diabox(final int po) {
 
 		viewd = new AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK).create();
@@ -271,6 +271,12 @@ public class MainActivity extends AppCompatActivity {
 		ed_t.setFocusableInTouchMode(true);
 		ed_r.setFocusableInTouchMode(true);
 		*/
+		ed_i.setTypeface(pds());
+		ed_c.setTypeface(pds());
+		ed_d.setTypeface(pds());
+		ed_s.setTypeface(pds());
+		ed_t.setTypeface(pds());
+		ed_r.setTypeface(pds());
 		viewd.setView(cvforiinfo);
 		viewd.setButton(AlertDialog.BUTTON_POSITIVE, "Confirm", new DialogInterface.OnClickListener() {
 			@Override
@@ -304,7 +310,7 @@ public class MainActivity extends AppCompatActivity {
 						grid1.smoothScrollToPosition(_dsrc.size());
 					}
 				} catch (Exception e) {
-					CEr("Add/Edit data Error", e.getMessage());
+					CEr("Add Info Error",e.getMessage());
 				}
 				di1.dismiss();
 			}
@@ -317,6 +323,8 @@ public class MainActivity extends AppCompatActivity {
 		});
 
 		viewd.show();
+		
+		//view info
 		try {
 			if (po != -1) {
 				ed_i.setText(getId(po));
@@ -327,7 +335,7 @@ public class MainActivity extends AppCompatActivity {
 				ed_r.setText(getRelease(po));
 			}
 		} catch (Exception e) {
-			CEr("Dialog Load Data Error", e.getMessage());
+			shm("-Load info error-".concat(e.getMessage()));
 		}
 	}
 
@@ -370,6 +378,7 @@ public class MainActivity extends AppCompatActivity {
 		return super.onCreateOptionsMenu(menu);
 	}
 
+	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
@@ -494,6 +503,10 @@ public class MainActivity extends AppCompatActivity {
 		Drawable ad = getDrawable(id);
 		ad.setColorFilter(Color.BLACK, PorterDuff.Mode.SRC_IN);
 		return ad;
+	}
+	
+	private Typeface pds(){
+		return Typeface.createFromAsset(getAssets(),"fonts/pdsmm_2.5.3_Regular.ttf");
 	}
 
 	private float getDip(int _in) {
