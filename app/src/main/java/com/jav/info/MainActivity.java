@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private ArrayList<String> itd = new ArrayList<>();
 	private ArrayList<HashMap<String, Object>> _dsrc = new ArrayList<>();
-	private String dataPath = "/storage/emulated/0/Adult/data/R_data.json";
+	private String dataPath = "/R_data.json";
 	private RequestNetwork rq;
 	private RequestNetwork.RequestListener rql;
 	private SharedPreferences set;
@@ -93,12 +93,11 @@ public class MainActivity extends AppCompatActivity {
 		set = getSharedPreferences("settings", Activity.MODE_PRIVATE);
 		setSupportActionBar(_toolbar);
 		rq = new RequestNetwork(this);
-
+		dataPath = Fileo.getPackageDataDir(getApplicationContext()).concat(dataPath);
 		if (Fileo.isExistFile(Fileo.getPackageDataDir(getApplicationContext()).concat("/data.json"))) {
-			//shm("yes");
+			
 		} else {
 			Fileo.writeFile(Fileo.getPackageDataDir(getApplicationContext()).concat("/data.json"), "test");
-			//shm("no");
 		}
 		rql = new RequestNetwork.RequestListener() {
 			@Override
@@ -162,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
 							pgd.setCanceledOnTouchOutside(false);
 							pgd.show();
 							Dow.startDownload("https://img2.javmost.com/file_image/" + getId(_position) + ".jpg",
-									getId(_position) + ".jpg", "Adult/img/", MainActivity.this);
+									getId(_position) + ".jpg", Fileo.getPackageDataDir(getApplicationContext()).replace("/storage/emulated/0/",""), MainActivity.this);
 							pp = i;
 						} else {
 							diabox(_position);
@@ -536,13 +535,17 @@ public class MainActivity extends AppCompatActivity {
 	private String getRelease(int po) {
 		return _dsrc.get(po).get("r").toString();
 	}
+	
+	private String getPkg(){
+		return Fileo.getPackageDataDir(getApplicationContext())+"/";
+	}
 
 	private String picPath(int i) {
-		return "/storage/emulated/0/Adult/img/" + getId(i) + ".jpg";
+		return getPkg()+"img/" + getId(i) + ".jpg";
 	}
 
 	private void saveData() {
-		Fileo.writeFile("/storage/emulated/0/Adult/data/R_data.json", new Gson().toJson(_dsrc).replace("[{", "[\n{")
+		Fileo.writeFile(getPkg()+"data.json", new Gson().toJson(_dsrc).replace("[{", "[\n{")
 				.replace("}]", "}\n]").replace("\",\"", "\",\n\"").replace("},{", "},\n{").toString());
 	}
 
