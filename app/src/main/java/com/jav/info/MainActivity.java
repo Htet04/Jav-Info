@@ -20,6 +20,7 @@ import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -42,6 +43,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -52,24 +54,17 @@ import java.util.HashMap;
 Reminder: recheck code and rewrite it. 
 */
 
-
-
 public class MainActivity extends AppCompatActivity {
 	private Toolbar _toolbar;
 	private TextView text;
 	private GridView grid1;
-	private ProgressDialog pgd;
 	private AlertDialog viewd;
 	private SwipeRefreshLayout _srl;
 	private FloatingActionButton _fab;
 	private int pp = 0;
 	private boolean opdelete = false;
-	private ArrayList<String> idtd = new ArrayList<>();
 	private HashMap<String, Object> map = new HashMap<>();
-
-	private ArrayList<String> itd = new ArrayList<>();
 	private ArrayList<HashMap<String, Object>> _dsrc = new ArrayList<>();
-	private String dataPath = "/R_data.json";
 	private RequestNetwork rq;
 	private RequestNetwork.RequestListener rql;
 	private SharedPreferences set;
@@ -80,6 +75,8 @@ public class MainActivity extends AppCompatActivity {
 		setContentView(R.layout.activity_main);
 
 		initialLogic(savedInstanceState);
+		initialLogic();
+		/*
 		if (Build.VERSION.SDK_INT >= 23) {
 			if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
 					|| checkSelfPermission(
@@ -91,12 +88,11 @@ public class MainActivity extends AppCompatActivity {
 			}
 		} else {
 			initialLogic();
-		}
+		}*/
 	}
 
 	private void initialLogic(Bundle sa) {
 		//initialize functions
-		registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 		registerReceiver(isNerworkAviable, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
 		grid1 = (GridView) findViewById(R.id.grid1);
 		_fab = (FloatingActionButton) findViewById(R.id._fab);
@@ -105,13 +101,7 @@ public class MainActivity extends AppCompatActivity {
 		set = getSharedPreferences("data", Activity.MODE_PRIVATE);
 		setSupportActionBar(_toolbar);
 		rq = new RequestNetwork(this);
-		dataPath = getPkg().concat(dataPath);
 
-		if(set.getString("data","").length()<10){
-			
-		}else{
-			_dsrc = new Gson().fromJson(set.getString("data","").toString(), new TypeToken<ArrayList<HashMap<String, Object>>>(){}.getType());
-		}
 		rql = new RequestNetwork.RequestListener() {
 			@Override
 			public void onResponse(String tag, String response, HashMap<String, Object> headers) {
@@ -157,36 +147,19 @@ public class MainActivity extends AppCompatActivity {
 					dd.setButton(AlertDialog.BUTTON_POSITIVE, "Yes", new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface d, int di) {
-							try{
-							_dsrc.remove(_position);
-							Fileo.deleteFile(picPath(_position));
-							save();
-							}catch (Exception e){
+							try {
+								_dsrc.remove(_position);
+							} catch (Exception e) {
 								shm(e.getMessage());
 							}
+							save();
 							((BaseAdapter) grid1.getAdapter()).notifyDataSetChanged();
 							d.dismiss();
 						}
 					});
 					dd.show();
 				} else {
-					if (!Fileo.isExistFile(picPath(_position))) {
-						if (Fileo.isConnected(MainActivity.this)) {
-							pgd = new ProgressDialog(MainActivity.this);
-							pgd.setTitle("Downloading " + getId(_position));
-							pgd.setIndeterminate(true);
-							pgd.setCancelable(false);
-							pgd.setCanceledOnTouchOutside(false);
-							pgd.show();
-							Dow.startDownload("https://img2.javmost.com/file_image/" + getId(_position) + ".jpg",
-									getId(_position) + ".jpg", Fileo.getPackageDataDir(getApplicationContext()).replace("/storage/emulated/0/",""), MainActivity.this);
-							pp = i;
-						} else {
-							diabox(_position);
-						}
-					} else {
-						diabox(_position);
-					}
+					diabox(_position);
 				}
 			}
 		});
@@ -209,13 +182,11 @@ public class MainActivity extends AppCompatActivity {
 			}
 		});
 	}
-	
-	
+
 	//here main logic whith few of code :)
 	private void initialLogic() {
 		try {
-			//_dsrc = new Gson().fromJson(Fileo.readFile(dataPath), new TypeToken<ArrayList<HashMap<String, Object>>>() {
-			//}.getType());
+			_dsrc = JsonToArray(set.getString("data", ""));
 			grid1.setAdapter(new Gridview1Adapter(_dsrc));
 		} catch (Exception e) {
 			shm(e.getMessage());
@@ -258,14 +229,14 @@ public class MainActivity extends AppCompatActivity {
 			txt.setTypeface(pds());
 			try {
 				txt.setText(getId(_position));
-				Fileo.setImgFromPath(img, picPath(_position));
+				setImgUrl(img,getImgUrl(_position));
 			} catch (Exception e) {
-				shm("Grid Problem: "+ e.getMessage());
+				shm("Grid Problem: " + e.getMessage());
 			}
 			return _view;
 		}
 	}
-	
+
 	//infomation dialog with add info function
 	public void diabox(final int po) {
 
@@ -280,6 +251,7 @@ public class MainActivity extends AppCompatActivity {
 		final EditText ed_s = (EditText) cvforiinfo.findViewById(R.id.ed_s);
 		final EditText ed_t = (EditText) cvforiinfo.findViewById(R.id.ed_t);
 		final EditText ed_r = (EditText) cvforiinfo.findViewById(R.id.ed_r);
+		final EditText ed_tn = (EditText) cvforiinfo.findViewById(R.id.ed_tn);
 		/*
 		ed_i.setFocusableInTouchMode(true);
 		ed_c.setFocusableInTouchMode(true);
@@ -287,6 +259,7 @@ public class MainActivity extends AppCompatActivity {
 		ed_s.setFocusableInTouchMode(true);
 		ed_t.setFocusableInTouchMode(true);
 		ed_r.setFocusableInTouchMode(true);
+		ed_tn.setFocusableInTouchMode(true);
 		*/
 		ed_i.setTypeface(pds());
 		ed_c.setTypeface(pds());
@@ -294,6 +267,7 @@ public class MainActivity extends AppCompatActivity {
 		ed_s.setTypeface(pds());
 		ed_t.setTypeface(pds());
 		ed_r.setTypeface(pds());
+		ed_tn.setTypeface(pds());
 		viewd.setView(cvforiinfo);
 		viewd.setButton(AlertDialog.BUTTON_POSITIVE, "Confirm", new DialogInterface.OnClickListener() {
 			@Override
@@ -311,7 +285,8 @@ public class MainActivity extends AppCompatActivity {
 						map.put("s", ed_s.getText().toString());
 						map.put("t", ed_t.getText().toString());
 						map.put("r", ed_r.getText().toString());
-						_dsrc.add(_dsrc.size(), map);
+						map.put("tn",ed_tn.getText().toString());
+						_dsrc.add(0, map);
 					} else {
 						// Edit data
 						_dsrc.get(po).put("i", ed_i.getText().toString());
@@ -320,14 +295,13 @@ public class MainActivity extends AppCompatActivity {
 						_dsrc.get(po).put("s", ed_s.getText().toString());
 						_dsrc.get(po).put("t", ed_t.getText().toString());
 						_dsrc.get(po).put("r", ed_r.getText().toString());
+						_dsrc.get(po).put("tn",ed_tn.getText().toString());
 					}
 					save();
 					((BaseAdapter) grid1.getAdapter()).notifyDataSetChanged();
-					if (set.getString("isScroll", "") == "yes") {
-						grid1.smoothScrollToPosition(_dsrc.size());
-					}
+					
 				} catch (Exception e) {
-					shm("Add Info Error: "+e.getMessage());
+					shm("Add Info Error: " + e.getMessage());
 				}
 				di1.dismiss();
 			}
@@ -340,7 +314,7 @@ public class MainActivity extends AppCompatActivity {
 		});
 
 		viewd.show();
-		
+
 		//view info
 		try {
 			if (po != -1) {
@@ -350,6 +324,7 @@ public class MainActivity extends AppCompatActivity {
 				ed_s.setText(getStudio(po));
 				ed_t.setText(getRuntime(po));
 				ed_r.setText(getRelease(po));
+				ed_tn.setText(getImgUrl(po));
 			}
 		} catch (Exception e) {
 			shm("-Load info error-".concat(e.getMessage()));
@@ -385,17 +360,16 @@ public class MainActivity extends AppCompatActivity {
 		m0.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
 		MenuItem m1 = menu.add(0, 1, 2, "Re-Load");
 		m1.setIcon(Cs(R.drawable.ic_reload));
-	
+
 		MenuItem m2 = menu.add(0, 2, 3, "Save Data");
 		m2.setIcon(Cs(R.drawable.ic_content_save));
-		
+
 		MenuItem m3 = menu.add(0, 4, 4, "Delete");
 		m3.setIcon(Cs(R.drawable.ic_delete));
 
 		return super.onCreateOptionsMenu(menu);
 	}
 
-	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
@@ -422,7 +396,7 @@ public class MainActivity extends AppCompatActivity {
 		}
 		return super.onOptionsItemSelected(item);
 	}
-
+/*
 	@Override
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -438,7 +412,7 @@ public class MainActivity extends AppCompatActivity {
 		}
 		}
 	}
-
+*/
 	@Override
 	public void onBackPressed() {
 		super.onBackPressed();
@@ -447,23 +421,8 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		unregisterReceiver(onComplete);
 		unregisterReceiver(isNerworkAviable);
 	}
-
-	BroadcastReceiver onComplete = new BroadcastReceiver() {
-
-		@Override
-		public void onReceive(Context p1, Intent p2) {
-			if (Fileo.isExistFile(picPath(pp))) {
-				shm("Download Complete");
-			} else {
-				shm("File not found");
-			}
-			pgd.dismiss();
-		}
-
-	};
 
 	BroadcastReceiver isNerworkAviable = new BroadcastReceiver() {
 		@Override
@@ -504,9 +463,9 @@ public class MainActivity extends AppCompatActivity {
 		ad.setColorFilter(Color.BLACK, PorterDuff.Mode.SRC_IN);
 		return ad;
 	}
-	
-	private Typeface pds(){
-		return Typeface.createFromAsset(getAssets(),"fonts/pdsmm_2.5.3_Regular.ttf");
+
+	private Typeface pds() {
+		return Typeface.createFromAsset(getAssets(), "fonts/pdsmm_2.5.3_Regular.ttf");
 	}
 
 	private float getDip(int _in) {
@@ -537,18 +496,30 @@ public class MainActivity extends AppCompatActivity {
 		return _dsrc.get(po).get("r").toString();
 	}
 	
-	private String getPkg(){
-		return Fileo.getPackageDataDir(getApplicationContext())+"/";
+	private String getImgUrl(int po){
+		return _dsrc.get(po).get("tn").toString();
 	}
 
-	private String picPath(int i) {
-		return getPkg()+"img/" + getId(i) + ".jpg";
+	private void setImgUrl(ImageView img, String url) {
+		Glide.with(ctx()).load(Uri.parse(url)).into(img);
 	}
 
 	private void save() {
-		set.edit().putString("data",new Gson().toJson(_dsrc)).commit();
-		
-		shm(set.getString("data",""));
+		set.edit().putString("data", ToJson(_dsrc)).commit();
+	}
+
+	private String ToJson(ArrayList<HashMap<String, Object>> ar) {
+		return new String(new Gson().toJson(ar));
+	}
+
+	private ArrayList<HashMap<String, Object>> JsonToArray(String s) {
+		return new Gson().fromJson(s, new TypeToken<ArrayList<HashMap<String, Object>>>() {
+		}.getType());
+	}
+
+	private HashMap<String, Object> JsonToMap(String s) {
+		return new Gson().fromJson(s, new TypeToken<HashMap<String, Object>>() {
+		}.getType());
 	}
 
 	private Context ctx() {

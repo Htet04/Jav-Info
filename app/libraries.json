@@ -40,5 +40,11 @@
     "groupId": "androidx.core",
     "scope": "compile",
     "versionName": "1.6.0"
+  },
+  {
+    "artifactId": "glide",
+    "excludes": [],
+    "groupId": "com.github.bumptech.glide",
+    "versionName": "4.13.2"
   }
 ]
