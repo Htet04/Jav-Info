@@ -1,46 +1,58 @@
 package com.jav.info;
 
+import android.Manifest;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.DownloadManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
+import android.widget.EditText;
+import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.SearchView;
+import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.appcompat.widget.Toolbar;
-
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.jav.info.Fileo;
-import com.jav.info.Dow;
+import java.util.ArrayList;
+import java.util.HashMap;
 
-import android.os.Bundle;
+/*
+Reminder: recheck code and rewrite it. 
+*/
 
-import android.app.*;
-import android.app.Activity;
 
-import android.view.*;
-
-import android.widget.*;
-
-import android.net.Uri;
-import android.graphics.drawable.*;
-import android.graphics.PorterDuff;
-import android.graphics.Color;
-import android.content.*;
-import android.view.inputmethod.EditorInfo;
-import android.text.InputType;
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.os.*;
-import android.content.SharedPreferences;
-
-import java.lang.*;
-import java.io.*;
-import java.util.*;
-import okhttp3.internal.connection.ConnectInterceptor;
 
 public class MainActivity extends AppCompatActivity {
 	private Toolbar _toolbar;
@@ -90,14 +102,15 @@ public class MainActivity extends AppCompatActivity {
 		_fab = (FloatingActionButton) findViewById(R.id._fab);
 		_srl = (SwipeRefreshLayout) findViewById(R.id._srl);
 		_toolbar = findViewById(R.id._toolbar);
-		set = getSharedPreferences("settings", Activity.MODE_PRIVATE);
+		set = getSharedPreferences("data", Activity.MODE_PRIVATE);
 		setSupportActionBar(_toolbar);
 		rq = new RequestNetwork(this);
-		dataPath = Fileo.getPackageDataDir(getApplicationContext()).concat(dataPath);
-		if (Fileo.isExistFile(Fileo.getPackageDataDir(getApplicationContext()).concat("/data.json"))) {
+		dataPath = getPkg().concat(dataPath);
+
+		if(set.getString("data","").length()<10){
 			
-		} else {
-			Fileo.writeFile(Fileo.getPackageDataDir(getApplicationContext()).concat("/data.json"), "test");
+		}else{
+			_dsrc = new Gson().fromJson(set.getString("data","").toString(), new TypeToken<ArrayList<HashMap<String, Object>>>(){}.getType());
 		}
 		rql = new RequestNetwork.RequestListener() {
 			@Override
@@ -144,8 +157,13 @@ public class MainActivity extends AppCompatActivity {
 					dd.setButton(AlertDialog.BUTTON_POSITIVE, "Yes", new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface d, int di) {
-							_dsrc.remove(i);
-							saveData();
+							try{
+							_dsrc.remove(_position);
+							Fileo.deleteFile(picPath(_position));
+							save();
+							}catch (Exception e){
+								shm(e.getMessage());
+							}
 							((BaseAdapter) grid1.getAdapter()).notifyDataSetChanged();
 							d.dismiss();
 						}
@@ -196,8 +214,8 @@ public class MainActivity extends AppCompatActivity {
 	//here main logic whith few of code :)
 	private void initialLogic() {
 		try {
-			_dsrc = new Gson().fromJson(Fileo.readFile(dataPath), new TypeToken<ArrayList<HashMap<String, Object>>>() {
-			}.getType());
+			//_dsrc = new Gson().fromJson(Fileo.readFile(dataPath), new TypeToken<ArrayList<HashMap<String, Object>>>() {
+			//}.getType());
 			grid1.setAdapter(new Gridview1Adapter(_dsrc));
 		} catch (Exception e) {
 			shm(e.getMessage());
@@ -242,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
 				txt.setText(getId(_position));
 				Fileo.setImgFromPath(img, picPath(_position));
 			} catch (Exception e) {
-				CEr("Grid Problem", e.getMessage());
+				shm("Grid Problem: "+ e.getMessage());
 			}
 			return _view;
 		}
@@ -303,13 +321,13 @@ public class MainActivity extends AppCompatActivity {
 						_dsrc.get(po).put("t", ed_t.getText().toString());
 						_dsrc.get(po).put("r", ed_r.getText().toString());
 					}
-					saveData();
+					save();
 					((BaseAdapter) grid1.getAdapter()).notifyDataSetChanged();
 					if (set.getString("isScroll", "") == "yes") {
 						grid1.smoothScrollToPosition(_dsrc.size());
 					}
 				} catch (Exception e) {
-					CEr("Add Info Error",e.getMessage());
+					shm("Add Info Error: "+e.getMessage());
 				}
 				di1.dismiss();
 			}
@@ -430,6 +448,7 @@ public class MainActivity extends AppCompatActivity {
 	protected void onDestroy() {
 		super.onDestroy();
 		unregisterReceiver(onComplete);
+		unregisterReceiver(isNerworkAviable);
 	}
 
 	BroadcastReceiver onComplete = new BroadcastReceiver() {
@@ -452,24 +471,6 @@ public class MainActivity extends AppCompatActivity {
 			//hi
 		}
 	};
-
-	//Error Dialog
-	public void CEr(String t, String m) {
-		final AlertDialog ad = new AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK).create();
-
-		ad.setIcon(R.drawable.ic_plus);
-		ad.setTitle(t);
-		ad.setMessage(m);
-		ad.setCancelable(false);
-		ad.setButton(AlertDialog.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int p) {
-				ad.dismiss();
-				finish();
-			}
-		});
-		ad.show();
-	}
 
 	//Mini Functions
 	private void creatNoti() {
@@ -544,9 +545,10 @@ public class MainActivity extends AppCompatActivity {
 		return getPkg()+"img/" + getId(i) + ".jpg";
 	}
 
-	private void saveData() {
-		Fileo.writeFile(getPkg()+"data.json", new Gson().toJson(_dsrc).replace("[{", "[\n{")
-				.replace("}]", "}\n]").replace("\",\"", "\",\n\"").replace("},{", "},\n{").toString());
+	private void save() {
+		set.edit().putString("data",new Gson().toJson(_dsrc)).commit();
+		
+		shm(set.getString("data",""));
 	}
 
 	private Context ctx() {
