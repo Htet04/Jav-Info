@@ -52,6 +52,13 @@ import java.util.HashMap;
 
 /*
 Reminder: recheck code and rewrite it. 
+
+Needed : 
+	fetch data and store it in sharedpreferences
+	Action for viewing cache data onClick
+	Save Data
+	Reload Data
+	Others Fun... :)
 */
 
 public class MainActivity extends AppCompatActivity {
@@ -61,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
 	private AlertDialog viewd;
 	private SwipeRefreshLayout _srl;
 	private FloatingActionButton _fab;
-	private int pp = 0;
+	private boolean isSearch = false;
 	private boolean opdelete = false;
 	private HashMap<String, Object> map = new HashMap<>();
 	private ArrayList<HashMap<String, Object>> _dsrc = new ArrayList<>();
@@ -106,6 +113,8 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onResponse(String tag, String response, HashMap<String, Object> headers) {
 				shm(response);
+				_dsrc = JsonToArray(response);
+				grid1.setAdapter(new Gridview1Adapter(_dsrc));
 				_srl.setRefreshing(false);
 			}
 
@@ -133,6 +142,9 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onItemClick(AdapterView<?> av, View v, int i, long l) {
 				final int _position = i;
+				
+				//Need to add some code for cache data
+				
 				if (opdelete) {
 					AlertDialog dd = new AlertDialog.Builder(MainActivity.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
 							.create();
@@ -168,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onRefresh() {
 				if (Fileo.isConnected(getApplicationContext())) {
-					rq.startRequestNetwork(RequestNetworkController.GET, "https://pastebin.com/raw/6g9LswwF", "", rql);
+					rq.startRequestNetwork(RequestNetworkController.GET, "https://pastebin.com/raw/UXD06VqQ", "", rql);
 				} else {
 					new Handler().postDelayed(new Runnable() {
 
@@ -186,8 +198,9 @@ public class MainActivity extends AppCompatActivity {
 	//here main logic whith few of code :)
 	private void initialLogic() {
 		try {
-			_dsrc = JsonToArray(set.getString("data", ""));
-			grid1.setAdapter(new Gridview1Adapter(_dsrc));
+			rq.startRequestNetwork(RequestNetworkController.GET,"https://pastebin.com/raw/UXD06VqQ","",rql);
+			//_dsrc = JsonToArray(set.getString("data", ""));
+			//grid1.setAdapter(new Gridview1Adapter(_dsrc));
 		} catch (Exception e) {
 			shm(e.getMessage());
 		}
@@ -228,8 +241,8 @@ public class MainActivity extends AppCompatActivity {
 			final ImageView img = (ImageView) _view.findViewById(R.id.img);
 			txt.setTypeface(pds());
 			try {
-				txt.setText(getId(_position));
-				setImgUrl(img,getImgUrl(_position));
+				txt.setText(_data.get(_position).get("i").toString());
+				setImgUrl(img,_data.get(_position).get("tn").toString());
 			} catch (Exception e) {
 				shm("Grid Problem: " + e.getMessage());
 			}
@@ -346,7 +359,13 @@ public class MainActivity extends AppCompatActivity {
 		sv.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 			@Override
 			public boolean onQueryTextChange(String query) {
-				shm(query);
+				try{
+					searchItem(query);
+					
+				}catch (Exception e){
+					shm(e.getMessage());
+					
+				}
 				return false;
 			}
 
@@ -484,7 +503,7 @@ public class MainActivity extends AppCompatActivity {
 		return _dsrc.get(po).get("d").toString();
 	}
 
-	private String getStudio(int po) {
+	private String getStudio( int po) {
 		return _dsrc.get(po).get("s").toString();
 	}
 
@@ -506,6 +525,23 @@ public class MainActivity extends AppCompatActivity {
 
 	private void save() {
 		set.edit().putString("data", ToJson(_dsrc)).commit();
+	}
+	
+	private void searchItem(String str){
+		int n = 0;
+		ArrayList<HashMap<String,Object>> cache = new ArrayList<>();
+		if(str==""){
+			grid1.setAdapter(new Gridview1Adapter(_dsrc));
+		}else{
+			for(int i = 0;i<_dsrc.size();i++){
+				if(_dsrc.get(n).get("i").toString().contains(str.toUpperCase())){
+					cache.add(_dsrc.get(n));
+					shm(new Gson().toJson(_dsrc.get(n)));
+				}
+				n++;
+			}
+			grid1.setAdapter(new Gridview1Adapter(cache));
+		}
 	}
 
 	private String ToJson(ArrayList<HashMap<String, Object>> ar) {

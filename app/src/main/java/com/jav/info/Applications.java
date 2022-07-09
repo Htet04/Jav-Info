@@ -30,6 +30,8 @@ public class Applications extends Application {
 			}
 		});
 		super.onCreate();
+Logger.initialize(this);
+;
 	}
 	private String getStackTrace(Throwable th){
 		final Writer result = new StringWriter();
