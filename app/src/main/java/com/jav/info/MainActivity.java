@@ -187,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onRefresh() {
 				if (Fileo.isConnected(getApplicationContext())) {
-					rq.startRequestNetwork(RequestNetworkController.GET, "https://pastebin.com/raw/UXD06VqQ", "", rql);
+					rq.startRequestNetwork(RequestNetworkController.GET, dataUrl(), "", rql);
 				} else {
 					new Handler().postDelayed(new Runnable() {
 
@@ -207,13 +207,11 @@ public class MainActivity extends AppCompatActivity {
 		try {
 			if (set.getString("data", "").isEmpty()) {
 				_srl.setRefreshing(true);
-				rq.startRequestNetwork(RequestNetworkController.GET, "https://pastebin.com/raw/UXD06VqQ", "", rql);
+				rq.startRequestNetwork(RequestNetworkController.GET, dataUrl(), "", rql);
 			} else {
 				_dsrc = JsonToArray(set.getString("data", ""));
 				grid1.setAdapter(new Gridview1Adapter(_dsrc));
 			}
-			//_dsrc = JsonToArray(set.getString("data", ""));
-			//grid1.setAdapter(new Gridview1Adapter(_dsrc));
 		} catch (Exception e) {
 			shm(e.getMessage());
 		}
@@ -547,6 +545,10 @@ public class MainActivity extends AppCompatActivity {
 
 	private String getImgUrl(int po) {
 		return _dsrc.get(po).get("tn").toString();
+	}
+	
+	private String dataUrl(){
+		return getResources().getString(R.string.dataUrl);
 	}
 
 	private void setImgUrl(ImageView img, String url) {

@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">Jav Info</string>
+    <string name="app_name" translatable="false">Jav Info</string>
+	<string name="dataUrl" translatable="false">https://pastebin.com/raw/UXD06VqQ</string>
 </resources>
