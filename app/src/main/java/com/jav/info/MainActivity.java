@@ -9,6 +9,8 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -112,10 +114,15 @@ public class MainActivity extends AppCompatActivity {
 		rql = new RequestNetwork.RequestListener() {
 			@Override
 			public void onResponse(String tag, String response, HashMap<String, Object> headers) {
-				shm(response);
-				_dsrc = JsonToArray(response);
-				grid1.setAdapter(new Gridview1Adapter(_dsrc));
+				try {
+					set.edit().putString("data", response).commit();
+					_dsrc = JsonToArray(response);
+					grid1.setAdapter(new Gridview1Adapter(_dsrc));
+				} catch (Exception e) {
+
+				}
 				_srl.setRefreshing(false);
+
 			}
 
 			@Override
@@ -142,9 +149,9 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onItemClick(AdapterView<?> av, View v, int i, long l) {
 				final int _position = i;
-				
+
 				//Need to add some code for cache data
-				
+
 				if (opdelete) {
 					AlertDialog dd = new AlertDialog.Builder(MainActivity.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
 							.create();
@@ -198,7 +205,13 @@ public class MainActivity extends AppCompatActivity {
 	//here main logic whith few of code :)
 	private void initialLogic() {
 		try {
-			rq.startRequestNetwork(RequestNetworkController.GET,"https://pastebin.com/raw/UXD06VqQ","",rql);
+			if (set.getString("data", "").isEmpty()) {
+				_srl.setRefreshing(true);
+				rq.startRequestNetwork(RequestNetworkController.GET, "https://pastebin.com/raw/UXD06VqQ", "", rql);
+			} else {
+				_dsrc = JsonToArray(set.getString("data", ""));
+				grid1.setAdapter(new Gridview1Adapter(_dsrc));
+			}
 			//_dsrc = JsonToArray(set.getString("data", ""));
 			//grid1.setAdapter(new Gridview1Adapter(_dsrc));
 		} catch (Exception e) {
@@ -242,7 +255,7 @@ public class MainActivity extends AppCompatActivity {
 			txt.setTypeface(pds());
 			try {
 				txt.setText(_data.get(_position).get("i").toString());
-				setImgUrl(img,_data.get(_position).get("tn").toString());
+				setImgUrl(img, _data.get(_position).get("tn").toString());
 			} catch (Exception e) {
 				shm("Grid Problem: " + e.getMessage());
 			}
@@ -298,7 +311,7 @@ public class MainActivity extends AppCompatActivity {
 						map.put("s", ed_s.getText().toString());
 						map.put("t", ed_t.getText().toString());
 						map.put("r", ed_r.getText().toString());
-						map.put("tn",ed_tn.getText().toString());
+						map.put("tn", ed_tn.getText().toString());
 						_dsrc.add(0, map);
 					} else {
 						// Edit data
@@ -308,11 +321,11 @@ public class MainActivity extends AppCompatActivity {
 						_dsrc.get(po).put("s", ed_s.getText().toString());
 						_dsrc.get(po).put("t", ed_t.getText().toString());
 						_dsrc.get(po).put("r", ed_r.getText().toString());
-						_dsrc.get(po).put("tn",ed_tn.getText().toString());
+						_dsrc.get(po).put("tn", ed_tn.getText().toString());
 					}
 					save();
 					((BaseAdapter) grid1.getAdapter()).notifyDataSetChanged();
-					
+
 				} catch (Exception e) {
 					shm("Add Info Error: " + e.getMessage());
 				}
@@ -353,18 +366,27 @@ public class MainActivity extends AppCompatActivity {
 			mb.setOptionalIconsVisible(true);
 		}
 
-		MenuItem m0 = menu.add(0, 3, 1, "Search");
+		MenuItem m0 = menu.add(0, 1, 1, "Search");
 		final SearchView sv = new SearchView(MainActivity.this);
 		m0.setActionView(sv);
+
+		m0.setIcon(Cs(R.drawable.ic_search));
+		m0.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+
+		final MenuItem m_export = menu.add(1, 2, 2, "Export Data");
+		m_export.setIcon(Cs(R.drawable.ic_export));
+
+		final MenuItem m_delete = menu.add(1, 3, 3, "Delete");
+		m_delete.setIcon(Cs(R.drawable.ic_delete));
+
 		sv.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 			@Override
 			public boolean onQueryTextChange(String query) {
-				try{
+				try {
 					searchItem(query);
-					
-				}catch (Exception e){
+				} catch (Exception e) {
 					shm(e.getMessage());
-					
+
 				}
 				return false;
 			}
@@ -375,24 +397,31 @@ public class MainActivity extends AppCompatActivity {
 				return false;
 			}
 		});
-		m0.setIcon(Cs(R.drawable.ic_search));
-		m0.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
-		MenuItem m1 = menu.add(0, 1, 2, "Re-Load");
-		m1.setIcon(Cs(R.drawable.ic_reload));
 
-		MenuItem m2 = menu.add(0, 2, 3, "Save Data");
-		m2.setIcon(Cs(R.drawable.ic_content_save));
+		sv.setOnSearchClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
 
-		MenuItem m3 = menu.add(0, 4, 4, "Delete");
-		m3.setIcon(Cs(R.drawable.ic_delete));
+				menu.setGroupEnabled(1, false);
+				menu.setGroupVisible(1, false);
+			}
+		});
+		sv.setOnCloseListener(new SearchView.OnCloseListener() {
+			@Override
+			public boolean onClose() {
 
+				menu.setGroupEnabled(1, true);
+				menu.setGroupVisible(1, true);
+				return false;
+			}
+		});
 		return super.onCreateOptionsMenu(menu);
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case (4): {
+		case (3): {
 			if (opdelete) {
 				opdelete = false;
 				_toolbar.setTitle(getString(R.string.app_name));
@@ -404,34 +433,35 @@ public class MainActivity extends AppCompatActivity {
 			}
 			break;
 		}
-		case (3): {
-
+		case (2): {
+			copyClip(ToJson(_dsrc).replace("},{", "},\n{"));
 			break;
 		}
-		case (2): {
+		case (1): {
 
 			break;
 		}
 		}
 		return super.onOptionsItemSelected(item);
 	}
-/*
-	@Override
-	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-		switch (requestCode) {
-		case (1): {
-			if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-				initialLogic();
-			} else {
-				requestPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
-						Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+
+	/*
+		@Override
+		public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+			super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+			switch (requestCode) {
+			case (1): {
+				if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+					initialLogic();
+				} else {
+					requestPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
+							Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+				}
+				break;
 			}
-			break;
+			}
 		}
-		}
-	}
-*/
+	*/
 	@Override
 	public void onBackPressed() {
 		super.onBackPressed();
@@ -503,7 +533,7 @@ public class MainActivity extends AppCompatActivity {
 		return _dsrc.get(po).get("d").toString();
 	}
 
-	private String getStudio( int po) {
+	private String getStudio(int po) {
 		return _dsrc.get(po).get("s").toString();
 	}
 
@@ -514,8 +544,8 @@ public class MainActivity extends AppCompatActivity {
 	private String getRelease(int po) {
 		return _dsrc.get(po).get("r").toString();
 	}
-	
-	private String getImgUrl(int po){
+
+	private String getImgUrl(int po) {
 		return _dsrc.get(po).get("tn").toString();
 	}
 
@@ -526,15 +556,20 @@ public class MainActivity extends AppCompatActivity {
 	private void save() {
 		set.edit().putString("data", ToJson(_dsrc)).commit();
 	}
-	
-	private void searchItem(String str){
+
+	private void copyClip(String str) {
+		((ClipboardManager) getSystemService(getApplicationContext().CLIPBOARD_SERVICE))
+				.setPrimaryClip(ClipData.newPlainText("clipboard", str));
+	}
+
+	private void searchItem(String str) {
 		int n = 0;
-		ArrayList<HashMap<String,Object>> cache = new ArrayList<>();
-		if(str==""){
+		ArrayList<HashMap<String, Object>> cache = new ArrayList<>();
+		if (str == "") {
 			grid1.setAdapter(new Gridview1Adapter(_dsrc));
-		}else{
-			for(int i = 0;i<_dsrc.size();i++){
-				if(_dsrc.get(n).get("i").toString().contains(str.toUpperCase())){
+		} else {
+			for (int i = 0; i < _dsrc.size(); i++) {
+				if (_dsrc.get(n).get("i").toString().contains(str.toUpperCase())) {
 					cache.add(_dsrc.get(n));
 					shm(new Gson().toJson(_dsrc.get(n)));
 				}
