@@ -56,10 +56,10 @@ import java.util.HashMap;
 Reminder: recheck code and rewrite it. 
 
 Needed : 
-	fetch data and store it in sharedpreferences
-	Action for viewing cache data onClick
-	Save Data
-	Reload Data
+	[✓]fetch data and store it in sharedpreferences
+	[]Action for viewing cache data onClick
+	[✓]Save Data
+	[✓]Reload Data
 	Others Fun... :)
 */
 
@@ -72,8 +72,11 @@ public class MainActivity extends AppCompatActivity {
 	private FloatingActionButton _fab;
 	private boolean isSearch = false;
 	private boolean opdelete = false;
+	private int cp = 0;
+	private int rp = 0;
 	private HashMap<String, Object> map = new HashMap<>();
 	private ArrayList<HashMap<String, Object>> _dsrc = new ArrayList<>();
+	private ArrayList<HashMap<String, Object>> cache;
 	private RequestNetwork rq;
 	private RequestNetwork.RequestListener rql;
 	private SharedPreferences set;
@@ -119,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
 					_dsrc = JsonToArray(response);
 					grid1.setAdapter(new Gridview1Adapter(_dsrc));
 				} catch (Exception e) {
-
+					shm(e.getMessage());
 				}
 				_srl.setRefreshing(false);
 
@@ -137,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
 			public void onClick(View v) {
 				if (opdelete) {
 					_toolbar.setTitle(getString(R.string.app_name));
+					_toolbar.getMenu().findItem(1).setVisible(true);
 					opdelete = false;
 					_fab.setRotation((float) 0);
 				} else {
@@ -148,11 +152,21 @@ public class MainActivity extends AppCompatActivity {
 		grid1.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> av, View v, int i, long l) {
-				final int _position = i;
-
-				//Need to add some code for cache data
-
+				rp = i;
+				
+				//for searching data cache
+				if(isSearch){
+				    int pio = 0;
+				    for(int poi = 0;poi<_dsrc.size();poi++){
+					    if(cache.get(rp).get("i").toString()==getId(pio)){
+							rp = pio;
+					    }
+					    pio++;
+					}
+				}
+				
 				if (opdelete) {
+					//deleting data
 					AlertDialog dd = new AlertDialog.Builder(MainActivity.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
 							.create();
 					dd.setTitle("Are you sure?");
@@ -167,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
 						@Override
 						public void onClick(DialogInterface d, int di) {
 							try {
-								_dsrc.remove(_position);
+								_dsrc.remove(rp);
 							} catch (Exception e) {
 								shm(e.getMessage());
 							}
@@ -178,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
 					});
 					dd.show();
 				} else {
-					diabox(_position);
+					diabox(rp);
 				}
 			}
 		});
@@ -366,6 +380,8 @@ public class MainActivity extends AppCompatActivity {
 
 		MenuItem m0 = menu.add(0, 1, 1, "Search");
 		final SearchView sv = new SearchView(MainActivity.this);
+		sv.setPadding(8,8,8,8);
+		sv.setFitsSystemWindows(true);
 		m0.setActionView(sv);
 
 		m0.setIcon(Cs(R.drawable.ic_search));
@@ -376,6 +392,16 @@ public class MainActivity extends AppCompatActivity {
 
 		final MenuItem m_delete = menu.add(1, 3, 3, "Delete");
 		m_delete.setIcon(Cs(R.drawable.ic_delete));
+		m_delete.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener(){
+			@Override
+			public boolean onMenuItemClick(MenuItem mi){
+				_toolbar.getMenu().findItem(1).setVisible(false);
+				return false;
+			}
+		});
+		
+		final MenuItem m_tp = menu.add(1,4,4,"Terms & Privacy");
+		m_tp.setIcon(Cs(R.drawable.ic_privacy));
 
 		sv.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 			@Override
@@ -399,7 +425,7 @@ public class MainActivity extends AppCompatActivity {
 		sv.setOnSearchClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-
+				isSearch = true;
 				menu.setGroupEnabled(1, false);
 				menu.setGroupVisible(1, false);
 			}
@@ -407,7 +433,7 @@ public class MainActivity extends AppCompatActivity {
 		sv.setOnCloseListener(new SearchView.OnCloseListener() {
 			@Override
 			public boolean onClose() {
-
+				isSearch= false;
 				menu.setGroupEnabled(1, true);
 				menu.setGroupVisible(1, true);
 				return false;
@@ -424,6 +450,7 @@ public class MainActivity extends AppCompatActivity {
 				opdelete = false;
 				_toolbar.setTitle(getString(R.string.app_name));
 				_fab.setRotation((float) 0);
+				_toolbar.getMenu().findItem(1).setVisible(true);
 			} else {
 				opdelete = true;
 				_toolbar.setTitle("Delete Items By Clicking");
@@ -566,14 +593,13 @@ public class MainActivity extends AppCompatActivity {
 
 	private void searchItem(String str) {
 		int n = 0;
-		ArrayList<HashMap<String, Object>> cache = new ArrayList<>();
+		cache = new ArrayList<>();
 		if (str == "") {
 			grid1.setAdapter(new Gridview1Adapter(_dsrc));
 		} else {
 			for (int i = 0; i < _dsrc.size(); i++) {
 				if (_dsrc.get(n).get("i").toString().contains(str.toUpperCase())) {
 					cache.add(_dsrc.get(n));
-					shm(new Gson().toJson(_dsrc.get(n)));
 				}
 				n++;
 			}
